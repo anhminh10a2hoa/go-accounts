@@ -13,7 +13,7 @@ func createAccounts() {
 			Username: "admin", Email: "admin@gmail.com",
 		},
 		{
-			Username: "anhinh10a2hoa", Email: "anhminh10a2hoa@gmail",
+			Username: "anhminh10a2hoa", Email: "anhminh10a2hoa@gmail",
 		},
 	}
 
@@ -22,7 +22,7 @@ func createAccounts() {
 		user := interfaces.User{Username: users[i].Username, Email: users[i].Email, Password: generatedPassword}
 		db.Create(&user)
 
-		account := interfaces.Account{Type: "admin", Name: string(users[i].Username + " 's account"), Balance: uint(10000 * int(i+1)), UserID: user.ID}
+		account := interfaces.Account{Type: "admin", Name: string(users[i].Username + "'s account"), Balance: uint(10000 * int(i+1)), UserID: user.ID}
 
 		db.Create(&account)
 	}
