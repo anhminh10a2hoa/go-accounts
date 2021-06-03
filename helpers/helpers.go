@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/anhminh10a2hoa/bunny-social-media/interfaces"
+	"github.com/anhminh10a2hoa/bunny-social-media/utils"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -29,7 +30,14 @@ func HashAndSalt(pass []byte) string {
 }
 
 func ConnectDB() *gorm.DB {
-	db, err := gorm.Open("postgres", "host=127.0.0.1 port=5432 user=postgres dbname=bunnysocialmedia password=password sslmode=disable")
+	config, err := utils.LoadConfig(".")
+
+	if err != nil {
+		log.Fatal("Can not start the server: ", err)
+	}
+
+	db, err := gorm.Open(config.DBDRIVER, "host="+config.DBADDRESS+" port="+config.DBPORT+" user="+config.DBUSER+" dbname="+config.DBNAME+" password="+config.DBPASSWORD+" sslmode=disable")
+
 	HandleErr(err)
 	return db
 }
