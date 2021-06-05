@@ -1,12 +1,12 @@
 package migrations
 
 import (
+	"github.com/anhminh10a2hoa/bunny-social-media/database"
 	"github.com/anhminh10a2hoa/bunny-social-media/helpers"
 	"github.com/anhminh10a2hoa/bunny-social-media/interfaces"
 )
 
 func createAccounts() {
-	db := helpers.ConnectDB()
 
 	users := &[2]interfaces.User{
 		{
@@ -20,21 +20,25 @@ func createAccounts() {
 	for i := 0; i < len(users); i++ {
 		generatedPassword := helpers.HashAndSalt([]byte(users[i].Username))
 		user := interfaces.User{Username: users[i].Username, Email: users[i].Email, Password: generatedPassword}
-		db.Create(&user)
+		database.DB.Create(&user)
 
 		account := interfaces.Account{Type: "admin", Name: string(users[i].Username + "'s account"), Balance: uint(10000 * int(i+1)), UserID: user.ID}
 
-		db.Create(&account)
+		database.DB.Create(&account)
 	}
-	defer db.Close()
 }
 
 func Migrate() {
 	User := &interfaces.User{}
 	Account := &interfaces.Account{}
-	db := helpers.ConnectDB()
-	db.AutoMigrate(User, Account)
-	defer db.Close()
+
+	database.DB.AutoMigrate(&User, &Account)
 
 	createAccounts()
+}
+
+func MigrateTransactions() {
+	Transaction := &interfaces.Transaction{}
+
+	database.DB.AutoMigrate(&Transaction)
 }

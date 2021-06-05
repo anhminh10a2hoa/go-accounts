@@ -8,7 +8,8 @@ import (
 	"net/http"
 
 	"github.com/anhminh10a2hoa/bunny-social-media/helpers"
-	"github.com/anhminh10a2hoa/bunny-social-media/interfaces"
+	"github.com/anhminh10a2hoa/bunny-social-media/transactions"
+	"github.com/anhminh10a2hoa/bunny-social-media/useraccounts"
 	"github.com/anhminh10a2hoa/bunny-social-media/users"
 
 	"github.com/gorilla/mux"
@@ -23,6 +24,13 @@ type Register struct {
 	Username string
 	Email    string
 	Password string
+}
+
+type TransactionBody struct {
+	UserId uint
+	From   uint
+	To     uint
+	Amount int
 }
 
 // Create readBody function
@@ -40,7 +48,7 @@ func apiResponse(call map[string]interface{}, w http.ResponseWriter) {
 		json.NewEncoder(w).Encode(resp)
 		// Handle error in else
 	} else {
-		resp := interfaces.ErrResponse{Message: "Wrong username or password"}
+		resp := call
 		json.NewEncoder(w).Encode(resp)
 	}
 }
@@ -79,12 +87,34 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	apiResponse(user, w)
 }
 
+func getMyTransactions(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userId := vars["userID"]
+	auth := r.Header.Get("Authorization")
+
+	transactions := transactions.GetMyTransactions(userId, auth)
+	apiResponse(transactions, w)
+}
+
+func transaction(w http.ResponseWriter, r *http.Request) {
+	body := readBody(r)
+	auth := r.Header.Get("Authorization")
+	var formattedBody TransactionBody
+	err := json.Unmarshal(body, &formattedBody)
+	helpers.HandleErr(err)
+
+	transaction := useraccounts.Transaction(formattedBody.UserId, formattedBody.From, formattedBody.To, formattedBody.Amount, auth)
+	apiResponse(transaction, w)
+}
+
 func StartApi() {
 	router := mux.NewRouter()
 	// Add panic handler middleware
 	router.Use(helpers.PanicHandler)
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
+	router.HandleFunc("/transactions", transaction).Methods("POST")
+	router.HandleFunc("/transactions/{userID}", getMyTransactions).Methods("GET")
 	router.HandleFunc("/user/{id}", getUser).Methods("GET")
 	fmt.Println("App is working on port :8888")
 	log.Fatal(http.ListenAndServe(":8888", router))
